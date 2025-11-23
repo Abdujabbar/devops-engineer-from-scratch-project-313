@@ -1,27 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session, select
 from typing import List, Optional
-from pydantic import BaseModel
 
 from shortener.db import get_session
 from shortener.models.link import Link
+from shortener.schemas.link import LinkCreate, LinkUpdate
 
 
 router = APIRouter(prefix="/links", tags=["Links"])
-
-
-class LinkCreate(BaseModel):
-    """Schema for creating a link."""
-    original_url: str
-    short_name: str
-    clicks: int = 0
-
-
-class LinkUpdate(BaseModel):
-    """Schema for updating a link."""
-    original_url: Optional[str] = None
-    short_name: Optional[str] = None
-    clicks: Optional[int] = None
 
 
 def generate_unique_short_url(short_name: str, session: Session, exclude_link_id: Optional[int] = None) -> str:
