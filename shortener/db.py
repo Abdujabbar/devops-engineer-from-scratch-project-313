@@ -1,7 +1,7 @@
 import os
 
 from sqlmodel import SQLModel, create_engine, Session
-from shortener.models import *
+from shortener.models import *  # noqa: F403
 
 DATABASE_URL = os.environ.get("DATABASE_URL")
 

@@ -1,3 +1,1 @@
 from shortener import app
-
-
