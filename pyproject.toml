@@ -1,0 +1,11 @@
+[project]
+name = "devops-engineer-from-scratch-project-313"
+version = "0.1.0"
+description = "PAAS platform implementation using FastAPI"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "fastapi[standard]>=0.121.3",
+    "pytest>=8.4.2",
+    "ruff>=0.14.5",
+]
