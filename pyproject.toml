@@ -5,7 +5,6 @@ description = "PAAS platform implementation using FastAPI"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
-    "asyncpg>=0.30.0",
     "dotenv>=0.9.9",
     "fastapi[standard]>=0.121.3",
     "psycopg2-binary>=2.9.11",
