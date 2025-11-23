@@ -65,8 +65,10 @@ def test_get_link_not_found(client):
 def test_list_links_empty(client):
     """Test listing links when there are no links."""
     response = client.get("/links")
-    assert response.status_code == status.HTTP_200_OK
+    assert response.status_code == status.HTTP_416_RANGE_NOT_SATISFIABLE
     assert response.json() == []
+    assert response.headers["Content-Range"] == "links */0"
+    assert response.headers["Accept-Ranges"] == "links"
 
 
 def test_list_links(client, sample_link_data):
@@ -80,11 +82,17 @@ def test_list_links(client, sample_link_data):
     }
     link2 = client.post("/links", json=link2_data).json()
     
-    # List all links
+    # List all links (default range [0,10])
     response = client.get("/links")
-    assert response.status_code == status.HTTP_200_OK
+    assert response.status_code == status.HTTP_206_PARTIAL_CONTENT
     links = response.json()
     assert len(links) == 2
+    
+    # Verify headers (default range [0,10] but only 2 items exist)
+    assert "Content-Range" in response.headers
+    assert response.headers["Content-Range"] == "links 0-1/2"
+    assert "Accept-Ranges" in response.headers
+    assert response.headers["Accept-Ranges"] == "links"
     
     # Verify both links are present
     link_ids = {link["id"] for link in links}
@@ -93,7 +101,7 @@ def test_list_links(client, sample_link_data):
 
 
 def test_list_links_pagination(client, sample_link_data):
-    """Test listing links with pagination."""
+    """Test listing links with range pagination."""
     # Create multiple links
     for i in range(5):
         link_data = {
@@ -103,23 +111,36 @@ def test_list_links_pagination(client, sample_link_data):
         }
         client.post("/links", json=link_data)
     
-    # Test with skip and limit
-    response = client.get("/links?skip=2&limit=2")
-    assert response.status_code == status.HTTP_200_OK
+    # Test with range parameter
+    response = client.get("/links?range=[2,3]")
+    assert response.status_code == status.HTTP_206_PARTIAL_CONTENT
     links = response.json()
     assert len(links) == 2
+    assert "Content-Range" in response.headers
+    assert response.headers["Content-Range"] == "links 2-3/5"
+    assert "Accept-Ranges" in response.headers
+    assert response.headers["Accept-Ranges"] == "links"
     
-    # Test limit only
-    response = client.get("/links?limit=3")
-    assert response.status_code == status.HTTP_200_OK
+    # Test range from beginning
+    response = client.get("/links?range=[0,2]")
+    assert response.status_code == status.HTTP_206_PARTIAL_CONTENT
     links = response.json()
     assert len(links) == 3
+    assert response.headers["Content-Range"] == "links 0-2/5"
     
-    # Test skip only
-    response = client.get("/links?skip=4")
-    assert response.status_code == status.HTTP_200_OK
+    # Test range near end
+    response = client.get("/links?range=[3,10]")
+    assert response.status_code == status.HTTP_206_PARTIAL_CONTENT
     links = response.json()
-    assert len(links) == 1
+    assert len(links) == 2  # Only 2 items available (3-4)
+    assert response.headers["Content-Range"] == "links 3-4/5"
+    
+    # Test without range (should use default [0,10])
+    response = client.get("/links")
+    assert response.status_code == status.HTTP_206_PARTIAL_CONTENT
+    links = response.json()
+    assert len(links) == 5  # Default range [0,10] returns all 5 items
+    assert response.headers["Content-Range"] == "links 0-4/5"
 
 
 def test_update_link(client, sample_link_data):
@@ -217,6 +238,39 @@ def test_delete_and_list_links(client, sample_link_data):
     links = response.json()
     assert len(links) == 1
     assert links[0]["id"] == link2["id"]
+
+
+def test_list_links_range_invalid_format(client):
+    """Test list_links with invalid range format."""
+    response = client.get("/links?range=invalid")
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "Invalid range format" in response.json()["detail"]
+
+
+def test_list_links_range_out_of_bounds(client, sample_link_data):
+    """Test list_links with range beyond available items."""
+    # Create one link
+    client.post("/links", json=sample_link_data)
+    
+    # Request range beyond available items
+    response = client.get("/links?range=[10,20]")
+    assert response.status_code == status.HTTP_416_RANGE_NOT_SATISFIABLE
+    assert response.headers["Content-Range"] == "links */1"
+    assert response.json() == []
+
+
+def test_list_links_range_invalid_start(client):
+    """Test list_links with negative start value."""
+    response = client.get("/links?range=[-1,10]")
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "Range start must be >= 0" in response.json()["detail"]
+
+
+def test_list_links_range_end_before_start(client):
+    """Test list_links with end before start."""
+    response = client.get("/links?range=[10,5]")
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "Range end must be >= start" in response.json()["detail"]
 
 
 def test_update_link_clicks_increment(client, sample_link_data):

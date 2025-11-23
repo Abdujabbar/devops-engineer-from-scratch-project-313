@@ -1,5 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlmodel import Session, select
+import re
+from fastapi import APIRouter, Depends, HTTPException, Response, status, Query
+from sqlmodel import Session, select, func
 from typing import List, Optional
 
 from shortener.db import get_session
@@ -62,10 +63,80 @@ def create_link(link_data: LinkCreate, session: Session = Depends(get_session)):
 
 
 @router.get("", response_model=List[Link])
-def list_links(session: Session = Depends(get_session), skip: int = 0, limit: int = 100):
-    """Get all links with pagination."""
-    statement = select(Link).offset(skip).limit(limit)
+def list_links(
+    response: Response,
+    session: Session = Depends(get_session),
+    range: str = Query("[0,10]", description="Range in format [start,end]"),
+):
+    """
+    Get all links with range-based pagination.
+    Supports range query parameter: ?range=[0,10]
+    Default range: [0,10]
+    Returns Content-Range header: links 0-10/42
+    """
+    # Get total count of links
+    count_statement = select(func.count(Link.id))
+    total_count = session.exec(count_statement).one()
+    
+    # Set Accept-Ranges header to indicate supported range unit
+    response.headers["Accept-Ranges"] = "links"
+    
+    # Parse range parameter (now always provided with default [0,10])
+    range_match = re.match(r'\[(-?\d+)\s*,\s*(-?\d+)\]', range)
+    if not range_match:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid range format. Expected format: [start,end]"
+        )
+    
+    start = int(range_match.group(1))
+    end = int(range_match.group(2))
+    
+    # Validate range
+    if start < 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Range start must be >= 0"
+        )
+    
+    if end < start:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Range end must be >= start"
+        )
+    
+    # Handle unsatisfiable range (start >= total_count)
+    if total_count == 0:
+        # No items exist
+        response.headers["Content-Range"] = "links */0"
+        response.status_code = status.HTTP_416_RANGE_NOT_SATISFIABLE
+        return []
+    
+    if start >= total_count:
+        # Range starts beyond available items
+        response.headers["Content-Range"] = f"links */{total_count}"
+        response.status_code = status.HTTP_416_RANGE_NOT_SATISFIABLE
+        return []
+    
+    # Ensure end doesn't exceed total_count - 1
+    if end >= total_count:
+        end = total_count - 1
+    
+    # Calculate limit and offset
+    limit = end - start + 1
+    offset = start
+    
+    # Query links with range
+    statement = select(Link).offset(offset).limit(limit).order_by(Link.id)
     links = session.exec(statement).all()
+    
+    # Build Content-Range header: links start-end/total
+    content_range = f"links {start}-{end}/{total_count}"
+    response.headers["Content-Range"] = content_range
+    
+    # Always return 206 for partial content (range is always used now)
+    response.status_code = status.HTTP_206_PARTIAL_CONTENT
+    
     return links
 
 
