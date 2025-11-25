@@ -1,3 +1,6 @@
+
+API_URL ?= http://localhost:8080
+
 start:
 	uv run fastapi dev --host localhost --port 8080
 
@@ -26,14 +29,14 @@ start-all:
 	@trap 'make stop-nginx; kill 0' INT TERM EXIT; \
 	make start-nginx; \
 	uv run fastapi dev --host localhost --port 8080 & \
-	npx start-hexlet-devops-deploy-crud-frontend & \
+	API_URL=$(API_URL) npx start-hexlet-devops-deploy-crud-frontend & \
 	wait
 
 start-container:
 	@echo "Starting backend, frontend, and nginx in container..."
 	@trap 'kill 0' SIGTERM SIGINT; \
 	uv run uvicorn main:app --host 0.0.0.0 --port 8080 & \
-	npx --yes start-hexlet-devops-deploy-crud-frontend & \
+	API_URL=$(API_URL) npx --yes start-hexlet-devops-deploy-crud-frontend & \
 	sleep 2 && nginx -g 'daemon off;' & \
 	wait
 
