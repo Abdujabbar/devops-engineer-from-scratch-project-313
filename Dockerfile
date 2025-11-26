@@ -24,17 +24,29 @@ RUN make install
 # Copy application code
 COPY . .
 
-# Build frontend with API_URL (default to localhost for build, can be overridden)
+# Build frontend with API_URL from environment variables (Render) or use default
+# Can be set via: docker build --build-arg API_URL=... or via Render's environment variables
 ARG API_URL=http://localhost:8080
 ENV API_URL=${API_URL}
 RUN FRONTEND_DIR=$$(npm root -g)/@hexlet/project-devops-deploy-crud-frontend && \
+    echo "Frontend directory: $$FRONTEND_DIR" && \
+    echo "API_URL: ${API_URL}" && \
     mkdir -p /usr/share/nginx/html && \
     cd $$FRONTEND_DIR && \
-    API_URL=${API_URL} npm run build && \
+    echo "Current directory: $$(pwd)" && \
+    echo "Running build command..." && \
+    API_URL=${API_URL} npm run build || (echo "Build failed!" && exit 1) && \
+    echo "Build completed, checking for dist directory..." && \
+    ls -la && \
     if [ -d "dist" ]; then \
-    cp -r dist/* /usr/share/nginx/html/; \
+    echo "Found dist directory, copying files..." && \
+    cp -r dist/* /usr/share/nginx/html/ && \
+    echo "Files copied successfully"; \
     else \
-    echo "Error: dist directory not found after build" && exit 1; \
+    echo "Error: dist directory not found after build in $$(pwd)" && \
+    echo "Contents of current directory:" && \
+    ls -la && \
+    exit 1; \
     fi
 
 # Copy nginx configuration for container
