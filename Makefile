@@ -65,3 +65,28 @@ format:
 
 install:
 	uv sync
+
+docker-build:
+	@echo "Building Docker image..."
+	@docker build -t devops-app .
+
+docker-run:
+	@echo "Running Docker container on port 8080..."
+	@if docker ps -q -f name=devops-app-test 2>/dev/null | grep -q .; then \
+		echo "Container already running"; \
+	else \
+		docker run -d --name devops-app-test --rm -p 8080:80 devops-app && \
+		echo "Container started. Access the app at http://localhost:8080"; \
+	fi
+
+docker-stop:
+	@echo "Stopping Docker container..."
+	@docker stop devops-app-test 2>/dev/null || true
+
+docker-logs:
+	@docker logs -f devops-app-test
+
+docker-test: docker-build docker-run
+	@echo "Docker container is running. Access the app at http://localhost:8080"
+	@echo "View logs with: make docker-logs"
+	@echo "Stop with: make docker-stop"

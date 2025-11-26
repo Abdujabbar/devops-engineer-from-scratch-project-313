@@ -2,8 +2,18 @@ FROM python:3.14-slim
 
 WORKDIR /app
 
+RUN echo "Acquire::http::Pipeline-Depth 0;" > /etc/apt/apt.conf.d/99custom && \
+    echo "Acquire::http::No-Cache true;" >> /etc/apt/apt.conf.d/99custom && \
+    echo "Acquire::BrokenProxy    true;" >> /etc/apt/apt.conf.d/99custom
+
+RUN printf 'deb http://ftp.de.debian.org/debian trixie main\n\
+    deb http://ftp.de.debian.org/debian trixie-updates main\n\
+    deb http://ftp.de.debian.org/debian-security trixie-security main\n' > /etc/apt/sources.list
+
+
 # Install Node.js, npm, nginx, and build dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends --fix-missing \
     make \
     curl \
     nginx \
@@ -29,24 +39,17 @@ COPY . .
 ARG API_URL=http://localhost:8080
 ENV API_URL=${API_URL}
 RUN set -e && \
-    FRONTEND_DIR=$$(npm root -g)/@hexlet/project-devops-deploy-crud-frontend && \
-    echo "Frontend directory: $$FRONTEND_DIR" && \
     echo "API_URL: ${API_URL}" && \
+    echo "Copying pre-built frontend files from globally installed package..." && \
     mkdir -p /usr/share/nginx/html && \
-    cd $$FRONTEND_DIR && \
-    echo "Current directory: $$(pwd)" && \
-    echo "Running build command..." && \
-    API_URL=${API_URL} npm run build && \
-    echo "Build completed, checking for dist directory..." && \
-    ls -la && \
-    if [ -d "dist" ]; then \
-    echo "Found dist directory, copying files..." && \
-    cp -r dist/* /usr/share/nginx/html/ && \
+    if [ -d "/usr/lib/node_modules/@hexlet/project-devops-deploy-crud-frontend/dist" ]; then \
+    echo "Found dist directory in global package, copying files..." && \
+    cp -r /usr/lib/node_modules/@hexlet/project-devops-deploy-crud-frontend/dist/* /usr/share/nginx/html/ && \
     echo "Files copied successfully"; \
     else \
-    echo "Error: dist directory not found after build in $$(pwd)" && \
-    echo "Contents of current directory:" && \
-    ls -la && \
+    echo "Error: dist directory not found in global package" && \
+    echo "Checking global package location..." && \
+    ls -la /usr/lib/node_modules/@hexlet/project-devops-deploy-crud-frontend/ 2>/dev/null || echo "Package not found in expected location" && \
     exit 1; \
     fi
 
