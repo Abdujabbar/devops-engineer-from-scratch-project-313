@@ -7,7 +7,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     make \
     curl \
     nginx \
-    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && curl -fsSL https://deb.nodesource.com/setup_24.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
     && rm -rf /var/lib/apt/lists/*
 
@@ -23,6 +23,19 @@ RUN make install
 
 # Copy application code
 COPY . .
+
+# Build frontend with API_URL (default to localhost for build, can be overridden)
+ARG API_URL=http://localhost:8080
+ENV API_URL=${API_URL}
+RUN FRONTEND_DIR=$$(npm root -g)/@hexlet/project-devops-deploy-crud-frontend && \
+    mkdir -p /usr/share/nginx/html && \
+    cd $$FRONTEND_DIR && \
+    API_URL=${API_URL} npm run build && \
+    if [ -d "dist" ]; then \
+    cp -r dist/* /usr/share/nginx/html/; \
+    else \
+    echo "Error: dist directory not found after build" && exit 1; \
+    fi
 
 # Copy nginx configuration for container
 COPY nginx-container.conf /etc/nginx/nginx.conf
