@@ -36,7 +36,7 @@ COPY . .
 
 # Build frontend with API_URL from environment variables (Render) or use default
 # Can be set via: docker build --build-arg API_URL=... or via Render's environment variables
-ARG API_URL=http://localhost:8080
+ARG API_URL=https://devops-engineer-from-scratch-project-313-unba.onrender.com/
 ENV API_URL=${API_URL}
 RUN set -e && \
     echo "API_URL: ${API_URL}" && \
