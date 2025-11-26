@@ -28,14 +28,15 @@ COPY . .
 # Can be set via: docker build --build-arg API_URL=... or via Render's environment variables
 ARG API_URL=http://localhost:8080
 ENV API_URL=${API_URL}
-RUN FRONTEND_DIR=$$(npm root -g)/@hexlet/project-devops-deploy-crud-frontend && \
+RUN set -e && \
+    FRONTEND_DIR=$$(npm root -g)/@hexlet/project-devops-deploy-crud-frontend && \
     echo "Frontend directory: $$FRONTEND_DIR" && \
     echo "API_URL: ${API_URL}" && \
     mkdir -p /usr/share/nginx/html && \
     cd $$FRONTEND_DIR && \
     echo "Current directory: $$(pwd)" && \
     echo "Running build command..." && \
-    API_URL=${API_URL} npm run build || (echo "Build failed!" && exit 1) && \
+    API_URL=${API_URL} npm run build && \
     echo "Build completed, checking for dist directory..." && \
     ls -la && \
     if [ -d "dist" ]; then \
