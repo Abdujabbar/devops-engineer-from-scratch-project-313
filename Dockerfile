@@ -34,27 +34,12 @@ RUN make install
 # Copy application code
 COPY . .
 
-# Build frontend with API_URL from environment variables (Render) or use default
-# Can be set via: docker build --build-arg API_URL=... or via Render's environment variables
-ARG API_URL=https://devops-engineer-from-scratch-project-313-unba.onrender.com/
-ENV API_URL=${API_URL}
-RUN set -e && \
-    echo "API_URL: ${API_URL}" && \
-    echo "Copying pre-built frontend files from globally installed package..." && \
-    mkdir -p /usr/share/nginx/html && \
-    if [ -d "/usr/lib/node_modules/@hexlet/project-devops-deploy-crud-frontend/dist" ]; then \
-    echo "Found dist directory in global package, copying files..." && \
-    cp -r /usr/lib/node_modules/@hexlet/project-devops-deploy-crud-frontend/dist/* /usr/share/nginx/html/ && \
-    echo "Files copied successfully"; \
-    else \
-    echo "Error: dist directory not found in global package" && \
-    echo "Checking global package location..." && \
-    ls -la /usr/lib/node_modules/@hexlet/project-devops-deploy-crud-frontend/ 2>/dev/null || echo "Package not found in expected location" && \
-    exit 1; \
-    fi
 
-# Copy nginx configuration for container
-COPY nginx-container.conf /etc/nginx/nginx.conf
+RUN FRONTEND_DIR=$$(npm root -g)/@hexlet/project-devops-deploy-crud-frontend && \
+    cp -r $$FRONTEND_DIR/dist/. /app/public/
+
+# Copy nginx configuration
+COPY nginx.conf /etc/nginx/nginx.conf
 
 # Expose port 80 (nginx)
 EXPOSE 80
