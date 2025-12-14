@@ -22,27 +22,31 @@ RUN apt-get update && \
     && rm -rf /var/lib/apt/lists/*
 
 # Install frontend package globally
-RUN npm install -g @hexlet/project-devops-deploy-crud-frontend
+
+
 
 # Install uv
 RUN pip install --no-cache-dir uv
 
-# Install Python dependencies
+# # Install Python dependencies
 COPY pyproject.toml uv.lock* Makefile ./
 RUN make install
 
-# Copy application code
+# # Copy application code
 COPY . .
 
+# Install frontend package globally
+RUN npm install -g @hexlet/project-devops-deploy-crud-frontend
 
-RUN FRONTEND_DIR=$$(npm root -g)/@hexlet/project-devops-deploy-crud-frontend && \
-    cp -r $$FRONTEND_DIR/dist/. /app/public/
+# Copy built frontend assets into /app/public from global node_modules
+RUN mkdir -p /app/public && \
+    cp -r "$(npm root -g)/@hexlet/project-devops-deploy-crud-frontend/dist/." /app/public/
 
-# Copy nginx configuration
+# # Copy nginx configuration
 COPY nginx.conf /etc/nginx/nginx.conf
 
-# Expose port 80 (nginx)
+# # Expose port 80 (nginx)
 EXPOSE 80
 
-# Start all services using Makefile command
+# # Start all services using Makefile command
 CMD ["make", "start-container"]
