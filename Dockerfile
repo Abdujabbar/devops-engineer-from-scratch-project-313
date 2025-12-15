@@ -36,7 +36,7 @@ RUN make install
 COPY . .
 
 # Install frontend package globally
-RUN npm install -g @hexlet/project-devops-deploy-crud-frontend
+RUN npm install -g @hexlet/project-devops-deploy-crud-frontend@1.0.4
 
 # Copy built frontend assets into /app/public from global node_modules
 RUN mkdir -p /app/public && \
