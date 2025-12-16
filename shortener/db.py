@@ -5,6 +5,9 @@ from shortener.models import *  # noqa: F403
 
 DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///./shortener.db")
 
+if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
 engine = create_engine(DATABASE_URL, echo=True)
 
 
