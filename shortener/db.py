@@ -5,7 +5,7 @@ from shortener.models import *  # noqa: F403
 
 DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///./shortener.db")
 
-engine = create_engine(DATABASE_URL, echo=True, future=True)
+engine = create_engine(DATABASE_URL, echo=True)
 
 
 def init_db():
