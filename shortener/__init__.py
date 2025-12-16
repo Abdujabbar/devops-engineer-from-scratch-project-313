@@ -35,8 +35,8 @@ app.add_middleware(
 
 app.middleware("http")(add_process_time_header)
 
-app.include_router(healthchecker_router)
-app.include_router(links_router)
+app.include_router(healthchecker_router, prefix="/api")
+app.include_router(links_router, prefix="/api")
 
 
 @app.on_event("startup")
