@@ -27,10 +27,7 @@ app = FastAPI()
 
 
 app.add_middleware(
-    CORSMiddleware,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"]
+    CORSMiddleware, allow_credentials=True, allow_methods=["*"], allow_headers=["*"]
 )
 
 app.middleware("http")(add_process_time_header)

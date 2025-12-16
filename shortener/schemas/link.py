@@ -28,4 +28,3 @@ class LinkSchema(BaseModel):
     short_name: str
     short_url: str
     # clicks: int = 0
-
