@@ -56,7 +56,7 @@ def create_link(link_data: LinkCreate, session: Session = Depends(get_session)):
         original_url=link_data.original_url,
         short_name=link_data.short_name,
         short_url=short_url,
-        clicks=link_data.clicks,
+        # clicks=link_data.clicks,
     )
     session.add(link)
     session.commit()

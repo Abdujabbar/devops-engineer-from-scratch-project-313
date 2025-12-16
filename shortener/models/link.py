@@ -6,4 +6,4 @@ class Link(SQLModel, table=True):
     original_url: str
     short_name: str
     short_url: str = Field(sa_column=Column(String, unique=True, index=True))
-    clicks: int = 0
+    # clicks: int = 0

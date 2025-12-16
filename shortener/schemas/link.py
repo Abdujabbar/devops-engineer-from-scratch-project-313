@@ -7,7 +7,7 @@ class LinkCreate(BaseModel):
 
     original_url: str
     short_name: str
-    clicks: int = 0
+    # clicks: int = 0
 
 
 class LinkUpdate(BaseModel):
@@ -15,5 +15,5 @@ class LinkUpdate(BaseModel):
 
     original_url: Optional[str] = None
     short_name: Optional[str] = None
-    clicks: Optional[int] = None
+    # clicks: Optional[int] = None
 

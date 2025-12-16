@@ -9,7 +9,7 @@ def test_create_link(client, sample_link_data):
     data = response.json()
     assert data["original_url"] == sample_link_data["original_url"]
     assert data["short_url"] == sample_link_data["short_url"]
-    assert data["clicks"] == sample_link_data["clicks"]
+    # assert data["clicks"] == sample_link_data["clicks"]
     assert data["id"] is not None
 
 
@@ -21,8 +21,6 @@ def test_create_link_with_default_clicks(client):
     }
     response = client.post("/api/links", json=link_data)
     assert response.status_code == status.HTTP_201_CREATED
-    data = response.json()
-    assert data["clicks"] == 0
 
 
 def test_create_link_validation_error(client):
@@ -49,7 +47,6 @@ def test_get_link(client, sample_link_data):
     assert data["id"] == link_id
     assert data["original_url"] == sample_link_data["original_url"]
     assert data["short_url"] == sample_link_data["short_url"]
-    assert data["clicks"] == sample_link_data["clicks"]
 
 
 def test_get_link_not_found(client):
@@ -73,7 +70,6 @@ def test_list_links(client, sample_link_data):
     link2_data = {
         "original_url": "https://google.com",
         "short_url": "goog456",
-        "clicks": 5
     }
     link2 = client.post("/api/links", json=link2_data).json()
     
@@ -96,7 +92,6 @@ def test_list_links_pagination(client, sample_link_data):
         link_data = {
             "original_url": f"https://example{i}.com",
             "short_url": f"link{i}",
-            "clicks": i
         }
         client.post("/api/links", json=link_data)
     
@@ -129,7 +124,6 @@ def test_update_link(client, sample_link_data):
     update_data = {
         "original_url": "https://updated.com",
         "short_url": "updated123",
-        "clicks": 10
     }
     response = client.put(f"/api/links/{link_id}", json=update_data)
     assert response.status_code == status.HTTP_200_OK
@@ -137,25 +131,6 @@ def test_update_link(client, sample_link_data):
     assert data["id"] == link_id
     assert data["original_url"] == update_data["original_url"]
     assert data["short_url"] == update_data["short_url"]
-    assert data["clicks"] == update_data["clicks"]
-
-
-def test_update_link_partial(client, sample_link_data):
-    """Test partial update of a link."""
-    # Create a link first
-    create_response = client.post("/api/links", json=sample_link_data)
-    link_id = create_response.json()["id"]
-    original_short_url = create_response.json()["short_url"]
-    
-    # Update only clicks
-    update_data = {"clicks": 42}
-    response = client.put(f"/api/links/{link_id}", json=update_data)
-    assert response.status_code == status.HTTP_200_OK
-    data = response.json()
-    assert data["clicks"] == 42
-    # Other fields should remain unchanged
-    assert data["original_url"] == sample_link_data["original_url"]
-    assert data["short_url"] == original_short_url
 
 
 def test_update_link_not_found(client):
@@ -214,17 +189,4 @@ def test_delete_and_list_links(client, sample_link_data):
     assert len(links) == 1
     assert links[0]["id"] == link2["id"]
 
-
-def test_update_link_clicks_increment(client, sample_link_data):
-    """Test updating only the clicks field."""
-    # Create a link
-    create_response = client.post("/api/links", json=sample_link_data)
-    link_id = create_response.json()["id"]
-    
-    # Update clicks multiple times
-    for new_clicks in [1, 5, 10]:
-        update_data = {"clicks": new_clicks}
-        response = client.put(f"/api/links/{link_id}", json=update_data)
-        assert response.status_code == status.HTTP_200_OK
-        assert response.json()["clicks"] == new_clicks
 
