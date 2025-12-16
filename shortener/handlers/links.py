@@ -112,7 +112,7 @@ def list_links(
         response.status_code = status.HTTP_416_RANGE_NOT_SATISFIABLE
         return []
 
-    if start > total_count:
+    if start >= total_count:
         # Range starts beyond available items
         response.headers["Content-Range"] = f"links */{total_count}"
         response.status_code = status.HTTP_416_RANGE_NOT_SATISFIABLE
@@ -133,9 +133,6 @@ def list_links(
     # Build Content-Range header: links start-end/total
     content_range = f"links {start}-{end}/{total_count}"
     response.headers["Content-Range"] = content_range
-
-    # Always return 206 for partial content (range is always used now)
-    response.status_code = status.HTTP_206_PARTIAL_CONTENT
 
     return links
 
