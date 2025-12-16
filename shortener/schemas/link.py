@@ -16,3 +16,4 @@ class LinkUpdate(BaseModel):
     original_url: Optional[str] = None
     short_name: Optional[str] = None
     clicks: Optional[int] = None
+

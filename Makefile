@@ -1,8 +1,16 @@
 
 API_URL ?= http://localhost:8080
 
+install:
+	uv sync
+
 start:
 	uv run fastapi dev --host localhost --port 8080
+
+run:
+	uv run fastapi dev --host localhost --port 8080
+
+
 
 start-frontend:
 	npx start-hexlet-devops-deploy-crud-frontend
