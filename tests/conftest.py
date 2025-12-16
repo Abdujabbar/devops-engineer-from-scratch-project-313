@@ -57,4 +57,4 @@ def pytest_sessionfinish(session, exitstatus):
 @pytest.fixture
 def sample_link_data():
     """Sample link data for testing."""
-    return {"original_url": "https://example.com", "short_name": "abc123", "clicks": 0}
+    return {"original_url": "https://example.com", "short_name": "abc123"}

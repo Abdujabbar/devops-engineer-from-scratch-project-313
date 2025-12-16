@@ -5,7 +5,7 @@ from typing import List, Optional
 
 from shortener.db import get_session
 from shortener.models.link import Link
-from shortener.schemas.link import LinkCreate, LinkUpdate
+from shortener.schemas.link import LinkCreate, LinkUpdate, LinkSchema
 
 
 router = APIRouter(prefix="/links", tags=["Links"])
@@ -64,7 +64,7 @@ def create_link(link_data: LinkCreate, session: Session = Depends(get_session)):
     return link
 
 
-@router.get("", response_model=List[Link])
+@router.get("", response_model=List[LinkSchema])
 def list_links(
     response: Response,
     session: Session = Depends(get_session),
@@ -134,7 +134,8 @@ def list_links(
     content_range = f"links {start}-{end}/{total_count}"
     response.headers["Content-Range"] = content_range
 
-    return links
+    # Convert SQLModel Link objects to LinkSchema
+    return [LinkSchema.model_validate(link) for link in links]
 
 
 @router.get("/{link_id}", response_model=Link)
