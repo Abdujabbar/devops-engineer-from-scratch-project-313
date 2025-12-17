@@ -22,7 +22,9 @@ def test_create_link_with_default_clicks(client):
     assert response.status_code == status.HTTP_201_CREATED
     data = response.json()
     assert data["short_name"] == "xyz789"
-    assert data["short_url"] == "/r/xyz789"  # short_url is generated from short_name with /r/ prefix
+    assert (
+        data["short_url"] == "/r/xyz789"
+    )  # short_url is generated from short_name with /r/ prefix
 
 
 def test_create_link_validation_error(client):
