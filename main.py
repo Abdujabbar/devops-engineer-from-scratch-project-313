@@ -1,1 +1,1 @@
-from shortener import app
+from shortener import app # noqa: F401
