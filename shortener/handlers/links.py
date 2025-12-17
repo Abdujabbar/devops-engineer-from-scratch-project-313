@@ -17,13 +17,14 @@ def generate_unique_short_url(
     """
     Generate a unique short_url based on short_name.
     If short_url already exists, append a numeric suffix.
+    Format: /r/{short_name}
 
     Args:
         short_name: The base name for the short URL
         session: Database session
         exclude_link_id: Optional link ID to exclude from uniqueness check (for updates)
     """
-    base_short_url = short_name
+    base_short_url = f"/r/{short_name}"
     short_url = base_short_url
     counter = 1
 
@@ -39,7 +40,7 @@ def generate_unique_short_url(
             break
 
         # Generate new short_url with suffix
-        short_url = f"{base_short_url}-{counter}"
+        short_url = f"/r/{short_name}-{counter}"
         counter += 1
 
     return short_url
