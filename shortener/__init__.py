@@ -20,22 +20,22 @@ sentry_sdk.init(
     send_default_pii=True,
 )
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
-app = FastAPI()
+def create_app():
+    logging.basicConfig(level=logging.INFO)
+    app = FastAPI()
 
+    app.add_middleware(
+        CORSMiddleware, allow_credentials=True, allow_methods=["*"], allow_headers=["*"]
+    )
 
-app.add_middleware(
-    CORSMiddleware, allow_credentials=True, allow_methods=["*"], allow_headers=["*"]
-)
+    app.middleware("http")(add_process_time_header)
 
-app.middleware("http")(add_process_time_header)
+    app.include_router(healthchecker_router)
+    app.include_router(links_router, prefix="/api")
 
-app.include_router(healthchecker_router)
-app.include_router(links_router, prefix="/api")
+    @app.on_event("startup")
+    def on_startup():
+        init_db()
 
-
-@app.on_event("startup")
-def on_startup():
-    init_db()
+    return app

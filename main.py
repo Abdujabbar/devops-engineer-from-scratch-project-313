@@ -1,1 +1,3 @@
-from shortener import app # noqa: F401
+from shortener import create_app
+
+app = create_app()  # noqa: F401
